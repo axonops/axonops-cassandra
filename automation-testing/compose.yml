@@ -1,0 +1,197 @@
+version: "3.8"
+
+services:
+  cassandra-0:
+    image: castesting:${CASSANDRA_MAJOR_VERSION}
+    ports:
+     - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=${AXONOPS_CLUSTER_NAME}
+      - CASSANDRA_SEEDS=cassandra-0
+      - CASSANDRA_SEED_NODE=true
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack0
+      - CASSANDRA_BROADCAST_RPC_ADDRESS=127.0.0.1
+      - CASSANDRA_NATIVE_TRANSPORT_PORT=9042
+      - CASSANDRA_MAJOR_VERSION=${CASSANDRA_MAJOR_VERSION}
+      - MAX_HEAP_SIZE=256m
+      - HEAP_NEWSIZE=50m
+      - AXON_AGENT_SERVER_HOST=${AXONOPS_SERVER_HOSTS}
+      - AXON_AGENT_SERVER_PORT=${AXONOPS_SERVER_PORT}
+      - AXON_AGENT_ORG=${AXONOPS_ORG}
+      - AXON_AGENT_TLS_MODE=${AXONOPS_TLS_MODE}
+      - AXON_AGENT_LOG_OUTPUT=file
+      - AXON_AGENT_KEY=${AXON_AGENT_KEY}
+      - EXTRA_ARGS=${JAVA_EXTRA_ARGS}
+      - AXON_AGENT_ARGS=-v 1
+      - AXON_AGENT_DEV=${AXON_AGENT_DEV}
+      - AXON_AGENT_VERSION=${AXON_AGENT_VERSION}
+      - AGENT_REPO=${AGENT_REPO_NAME}
+      - CASSANDRA_AGENT_VERSION=${CASSANDRA_AGENT_VERSION}
+      - CASSANDRA_AGENT_DEV=${CASSANDRA_AGENT_DEV}
+    volumes:
+      # - cassandra-0:/var/lib/cassandra
+      - ${AXON_AGENT_SOURCE_DIR}/axon-agent:/tmp/axonagent/axon-agent
+      - cassandra-0-axonops:/var/lib/axonops/
+      # - ${CASSANDRA_AGENT_SOURCE_DIR}/build/libs/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar:/usr/share/axonops/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar:ro
+    healthcheck:
+      test: ["CMD", "/opt/cassandra/bin/nodetool", "statusgossip"]
+      interval: 10s
+      timeout: 5s
+      retries: 50
+  cassandra-1:
+    image: castesting:${CASSANDRA_MAJOR_VERSION}
+    ports:
+     - "9043:9043"
+    depends_on:
+      cassandra-0:
+        condition: service_healthy
+    environment:
+      - CASSANDRA_CLUSTER_NAME=${AXONOPS_CLUSTER_NAME}
+      - CASSANDRA_SEEDS=cassandra-0
+      - CASSANDRA_SEED_NODE=false
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_BROADCAST_RPC_ADDRESS=127.0.0.1
+      - CASSANDRA_NATIVE_TRANSPORT_PORT=9043
+      - CASSANDRA_MAJOR_VERSION=${CASSANDRA_MAJOR_VERSION}
+      - MAX_HEAP_SIZE=256m
+      - HEAP_NEWSIZE=50m
+      - AXON_AGENT_SERVER_HOST=${AXONOPS_SERVER_HOSTS}
+      - AXON_AGENT_SERVER_PORT=${AXONOPS_SERVER_PORT}
+      - AXON_AGENT_ORG=${AXONOPS_ORG}
+      - AXON_AGENT_TLS_MODE=${AXONOPS_TLS_MODE}
+      - AXON_AGENT_LOG_OUTPUT=file
+      - AXON_AGENT_KEY=${AXON_AGENT_KEY}
+      - EXTRA_ARGS=${JAVA_EXTRA_ARGS}
+      - AXON_AGENT_ARGS=-v 1
+      - AXON_AGENT_DEV=${AXON_AGENT_DEV}
+      - AXON_AGENT_VERSION=${AXON_AGENT_VERSION}      
+      - AGENT_REPO=${AGENT_REPO_NAME}
+      - AGENT_VERSION=${AGENT_VERSION}
+      - CASSANDRA_AGENT_VERSION=${CASSANDRA_AGENT_VERSION}
+    volumes:
+      # - cassandra-1:/var/lib/cassandra
+      - ${AXON_AGENT_SOURCE_DIR}/axon-agent:/tmp/axonagent/axon-agent
+      - cassandra-1-axonops:/var/lib/axonops/
+      # - ${CASSANDRA_AGENT_SOURCE_DIR}/build/libs/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar:/usr/share/axonops/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar:ro
+    healthcheck:
+      test: ["CMD", "/opt/cassandra/bin/nodetool", "statusgossip"]
+      interval: 10s
+      timeout: 5s
+      retries: 50      
+  cassandra-2:
+    image: castesting:${CASSANDRA_MAJOR_VERSION}
+    ports:
+     - "9044:9044"
+    depends_on:
+      cassandra-1:
+        condition: service_healthy     
+    environment:
+      - CASSANDRA_CLUSTER_NAME=${AXONOPS_CLUSTER_NAME}
+      - CASSANDRA_SEEDS=cassandra-0
+      - CASSANDRA_SEED_NODE=false
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack2
+      - CASSANDRA_BROADCAST_RPC_ADDRESS=127.0.0.1
+      - CASSANDRA_NATIVE_TRANSPORT_PORT=9044
+      - CASSANDRA_MAJOR_VERSION=${CASSANDRA_MAJOR_VERSION}
+      - MAX_HEAP_SIZE=256m
+      - HEAP_NEWSIZE=50m
+      - AXON_AGENT_SERVER_HOST=${AXONOPS_SERVER_HOSTS}
+      - AXON_AGENT_SERVER_PORT=${AXONOPS_SERVER_PORT}
+      - AXON_AGENT_ORG=${AXONOPS_ORG}
+      - AXON_AGENT_TLS_MODE=${AXONOPS_TLS_MODE}
+      - AXON_AGENT_LOG_OUTPUT=file
+      - AXON_AGENT_KEY=${AXON_AGENT_KEY}
+      - EXTRA_ARGS=${JAVA_EXTRA_ARGS}
+      - AXON_AGENT_ARGS=-v 1
+      - AXON_AGENT_DEV=${AXON_AGENT_DEV}
+      - AGENT_REPO=${AGENT_REPO_NAME}
+      - AGENT_VERSION=${AGENT_VERSION}
+      - AXON_AGENT_VERSION=${AXON_AGENT_VERSION}      
+      - CASSANDRA_AGENT_VERSION=${CASSANDRA_AGENT_VERSION}
+      - CASSANDRA_DATA_LOAD=true      
+    volumes:
+      # - cassandra-2:/var/lib/cassandra
+      - ./testdb.sql:/tmp/testdb.sql      
+      - ${AXON_AGENT_SOURCE_DIR}/axon-agent:/tmp/axonagent/axon-agent
+      - cassandra-2-axonops:/var/lib/axonops/
+      # - ${CASSANDRA_AGENT_SOURCE_DIR}/build/libs/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar:/usr/share/axonops/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar:ro
+    healthcheck:
+      test: ["CMD", "/opt/cassandra/bin/nodetool", "statusgossip"]
+      interval: 10s
+      timeout: 5s
+      retries: 50      
+
+  ssh-server:
+    image: lscr.io/linuxserver/openssh-server:latest
+    container_name: ssh-server
+    ports:
+      - "22222:2222"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - USER_NAME=test
+      - USER_PASSWORD=test
+      - PASSWORD_ACCESS=true
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_REGION: eu-west-2
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001" --address ":9000" 
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    environment:
+      - ACCESS_KEY=rBzPaQ58AAyKQMXDp620
+      - SECRET_KEY=zW11AsczTbyXfThzF7B7spXThPVn4dftPwcRkIUS
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      echo 'Setting up MinIO...';
+      /usr/bin/mc alias set admin http://minio:9000 minioadmin minioadmin;
+      echo 'Creating bucket...';      
+      /usr/bin/mc mb admin/testbucket --ignore-existing;
+      /usr/bin/mc anonymous set public admin/testbucket;
+      /usr/bin/mc admin user svcacct add admin minioadmin --access-key $$ACCESS_KEY --secret-key $$SECRET_KEY;
+      /usr/bin/mc admin policy attach admin readwrite --user $$ACCESS_KEY;
+      /usr/bin/mc alias set usertest http://minio:9000 $$ACCESS_KEY $$SECRET_KEY;
+      /usr/bin/mc ls usertest/testbucket;
+      echo 'All tests passed!';
+      exit 0;
+      "
+          
+      
+volumes:
+  cassandra-0:
+  cassandra-1:
+  cassandra-2:
+  cassandra-0-axonops:
+  cassandra-1-axonops:
+  cassandra-2-axonops:
+  minio-data:
