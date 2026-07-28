@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CHANGELOG.md` (this file).
 
 ### Changed
+- `Dockerfile-template` now installs the AxonOps apt repo signing key into `/usr/share/keyrings/axonops.gpg` (via `gpg --dearmor`) and references it with `signed-by=` in the sources list, replacing the deprecated `apt-key add`. Adds `ca-certificates` to the install set.
 - Repository migrated from Bitbucket (`git@bitbucket.org:digitalisio/dk-axonops-cassandra.git`) to GitHub (`git@github.com:axonops/axonops-cassandra.git`); `README.md` updated with the new clone URL and CI documentation.
 - Google Artifact Registry authentication now decodes the base64 `GCLOUD_API_KEYFILE` secret to a file and logs in via `--password-stdin`, keeping the key out of command lines and logs.
 
