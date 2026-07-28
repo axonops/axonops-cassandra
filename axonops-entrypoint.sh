@@ -20,22 +20,22 @@ else
   MAJOR_VERSION=$(echo "$CASSANDRA_VERSION" | sed -r 's/^([0-9]+\.[0-9]+).*$/\1/')
   echo "JVM_OPTS=\"\$JVM_OPTS -javaagent:/usr/share/axonops/axon-cassandra$MAJOR_VERSION-agent.jar=/etc/axonops/axon-agent.yml\"" >> $CASSANDRA_CONF/cassandra-env.sh
 fi
-# Supervise axon-agent: restart forever on exit, with crash-loop backoff.
-# Runs as the axonops user in the background so the container lifecycle stays
-# tied to Cassandra (exec'd below), not the agent. If the agent dies it is
-# restarted automatically; the loop survives the exec by being reparented to
-# the Cassandra process. The agent is piped through tee, so its real exit code
-# is read from PIPESTATUS. Previously a dead agent was never restarted.
-export AXON_AGENT_ARGS
-su axonops -c '
-  log=/var/log/axonops/axon-agent.log
-  fails=0
+# Supervise axon-agent: restart forever on exit, with crash-loop backoff (issue #154).
+# Runs as a backgrounded subshell so the container lifecycle stays tied to
+# Cassandra (exec'd below), not the agent. The agent runs as the axonops user
+# via su, and is piped through tee, so its real exit code is read from
+# PIPESTATUS, not $?.
+supervise_axon_agent() {
+  local log="/var/log/axonops/axon-agent.log"
+  local fails=0
+  local window
   window=$(date +%s)
   while true; do
     echo "[axonops-supervise] starting axon-agent" | tee -a "$log" 2>/dev/null
-    /usr/share/axonops/axon-agent $AXON_AGENT_ARGS 2>&1 | tee -a "$log" 2>/dev/null
-    rc=${PIPESTATUS[0]}
+    su axonops -c "/usr/share/axonops/axon-agent $AXON_AGENT_ARGS" 2>&1 | tee -a "$log" 2>/dev/null
+    local rc=${PIPESTATUS[0]}
     echo "[axonops-supervise] axon-agent exited rc=${rc}, restarting" | tee -a "$log" 2>/dev/null
+    local now
     now=$(date +%s)
     if [ $((now - window)) -gt 60 ]; then
       fails=0
@@ -51,6 +51,9 @@ su axonops -c '
       sleep 2
     fi
   done
-' &
+}
+
+# Start axon-agent under supervision in the background
+supervise_axon_agent &
 
 exec /usr/local/bin/docker-entrypoint.sh "$@"
