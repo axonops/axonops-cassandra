@@ -41,10 +41,13 @@ rm -f $TMPFILE
 # CI can read it with `docker inspect` instead of having to run the image.
 # The package is named axon-cassandra<ver>-agent (or -agent-jdk17 on 5.0), so
 # match on the prefix rather than relying on a dpkg-query wildcard.
+# The version extraction assumes a Debian version of the form
+# [epoch:]upstream[-revision]; strip a leading epoch and the trailing Debian
+# revision, keeping the upstream version for the label (e.g. 1:2.1.0-1 -> 2.1.0).
 AGENT_VER=$(docker run --rm --entrypoint sh "$STAGE" -c \
   "dpkg-query -W -f='\${Package} \${Version}\n' 2>/dev/null \
-     | awk '/^axon-cassandra[0-9.]*-agent/ {print \$2; exit}'" \
-  | sed 's/-.*//')
+     | awk '\$1 ~ /^axon-cassandra[0-9.]+-agent(-jdk[0-9]+)?\$/ {print \$2; exit}'" \
+  | sed 's/^[0-9]*://; s/-[^-]*$//')
 
 if [ -z "$AGENT_VER" ]
 then

@@ -88,7 +88,6 @@ Image-specific settings. All [official Cassandra image](https://hub.docker.com/_
 |----------|------|---------|---------|-------------|
 | `CASSANDRA_NATIVE_TRANSPORT_PORT` | int | `9042` (image default) | `9142` | Overrides `native_transport_port` in `cassandra.yaml` at startup. |
 | `AXON_AGENT_ARGS` | string | *(empty)* | `-log-level debug` | Extra arguments passed to the `axon-agent` process. |
-| `AXON_AGENT_LOG_OUTPUT` | string | `std` | `std` | Agent log destination (`std` sends logs to stdout). |
 
 | Mount / path | Purpose |
 |--------------|---------|
