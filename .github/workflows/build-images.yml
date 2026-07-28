@@ -8,8 +8,18 @@ name: build-images
 # amd64 legs run on GitHub-hosted x86 runners; arm64 legs run on GitHub-hosted
 # arm64 runners (no self-hosted runner required). Images are pushed to the
 # GitHub Container Registry (ghcr.io) using the built-in GITHUB_TOKEN.
+#
+# Published manifest tags:
+#   <cassandra_version>-<axon_agent_version>-<repo_tag>   e.g. 5.0.8-2.1.0-1.0.0
+#   <minor>                                               e.g. 5.0  (moving alias)
+# The per-arch tags <minor>-<amd64|arm64> are build intermediates.
 on:
   workflow_dispatch:
+    inputs:
+      repo_tag:
+        description: "Repo release version — third tag component (e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
 
 permissions:
   contents: read
@@ -53,6 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_CLI_EXPERIMENTAL: enabled
+      REPO_TAG: ${{ inputs.repo_tag }}
     steps:
       - name: Log in to GitHub Container Registry
         run: |
@@ -62,8 +73,30 @@ jobs:
       - name: Create and push manifests
         run: |
           for v in 4.1 4.0 5.0; do
-            docker manifest create "${IMGBASE}:${v}" \
-              "${IMGBASE}:${v}-amd64" \
-              "${IMGBASE}:${v}-arm64"
-            docker manifest push "${IMGBASE}:${v}"
+            amd="${IMGBASE}:${v}-amd64"
+            arm="${IMGBASE}:${v}-arm64"
+            docker pull "$amd"
+
+            # Full Cassandra patch version baked into the base image (e.g. 5.0.8).
+            cassandra_version=$(docker inspect "$amd" \
+              --format '{{range .Config.Env}}{{println .}}{{end}}' \
+              | sed -n 's/^CASSANDRA_VERSION=//p')
+
+            # Installed axon-agent package version (strip any Debian revision).
+            agent_version=$(docker run --rm --entrypoint sh "$amd" -c \
+              "dpkg-query -W -f='\${Version}\n' 'axon-cassandra*-agent*' 2>/dev/null | head -1" \
+              | sed 's/-.*//')
+
+            if [ -z "$cassandra_version" ] || [ -z "$agent_version" ]; then
+              echo "FATAL: could not resolve versions for $v (cassandra='$cassandra_version' agent='$agent_version')"
+              exit 1
+            fi
+
+            full="${cassandra_version}-${agent_version}-${REPO_TAG}"
+            echo "Publishing $v as manifests: ${full}, ${v}"
+
+            for tag in "$full" "$v"; do
+              docker manifest create "${IMGBASE}:${tag}" "$amd" "$arm"
+              docker manifest push "${IMGBASE}:${tag}"
+            done
           done

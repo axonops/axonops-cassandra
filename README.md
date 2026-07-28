@@ -29,6 +29,15 @@ CI runs on GitHub Actions (manual `workflow_dispatch` triggers):
 
 Images are published to the GitHub Container Registry: `ghcr.io/axonops/cassandra`.
 
+Each build publishes a multi-arch manifest tagged with the full version triple, plus a moving minor alias:
+
+```
+ghcr.io/axonops/cassandra:<cassandra_version>-<axon_agent_version>-<repo_tag>   # e.g. 5.0.8-2.1.0-1.0.0
+ghcr.io/axonops/cassandra:<minor>                                              # e.g. 5.0 (moving alias)
+```
+
+The `<repo_tag>` (third component) is supplied as the `repo_tag` input when dispatching `build-images.yml`.
+
 To build locally:
 
 ```bash
