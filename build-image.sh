@@ -36,16 +36,22 @@ docker build -t="$STAGE" -f $TMPFILE .
 rm -f $TMPFILE
 
 # apt resolves the axon-agent version during the build, so it can only be read
-# afterwards. Query it once here (native arch, image already local) and stamp it
-# as a label, so consumers and CI can read it with `docker inspect` instead of
-# having to run the image.
+# afterwards. List the installed packages and pick the axon-cassandra agent
+# (native arch, image already local), then stamp it as a label so consumers and
+# CI can read it with `docker inspect` instead of having to run the image.
+# The package is named axon-cassandra<ver>-agent (or -agent-jdk17 on 5.0), so
+# match on the prefix rather than relying on a dpkg-query wildcard.
 AGENT_VER=$(docker run --rm --entrypoint sh "$STAGE" -c \
-  "dpkg-query -W -f='\${Version}\n' 'axon-cassandra*-agent*' 2>/dev/null | head -1" \
+  "dpkg-query -W -f='\${Package} \${Version}\n' 2>/dev/null \
+     | awk '/^axon-cassandra[0-9.]*-agent/ {print \$2; exit}'" \
   | sed 's/-.*//')
 
 if [ -z "$AGENT_VER" ]
 then
   echo "FATAL: could not determine the axon-agent version in $STAGE"
+  echo "Installed axon* packages:"
+  docker run --rm --entrypoint sh "$STAGE" -c \
+    "dpkg-query -W -f='\${Package}\t\${Version}\n' 'axon*' 2>&1 || true"
   docker image rm "$STAGE" >/dev/null 2>&1 || true
   exit 1
 fi
