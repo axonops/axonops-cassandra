@@ -1,0 +1,27 @@
+ARG CASSANDRA_MAJOR_VERSION
+FROM registry.axonops.com/axonops-public/axonops-docker/cassandra:${CASSANDRA_MAJOR_VERSION}
+ENV AXON_AGENT_LOG_OUTPUT=std
+
+RUN AGENT_VER=$(echo "$CASSANDRA_VERSION" | sed -r 's/^([0-9]+\.[0-9]+).*$/\1/') && \
+    # groupadd --gid 9988 axonops && \
+    # useradd --gid 9988 --uid 9988 --shell /bin/bash -c "AxonOps" -G cassandra axonops && \
+    # usermod -aG axonops cassandra && \
+    apt-get -y update && apt-get -y install curl gnupg netcat-openbsd && \
+    curl https://packages.axonops.com/apt/repo-signing-key.gpg | apt-key add - && \
+    echo "deb https://packages.axonops.com/apt axonops-apt main" >/etc/apt/sources.list.d/axonops-apt.list && \
+    apt-get -y update && \
+    apt-get -y install axon-cassandra${AGENT_VER}-agent less && \
+    apt-get -y clean && \
+    echo 'axon-agent:' > /etc/axonops/axon-agent.yml && \
+    chown cassandra:cassandra /etc/axonops/axon-agent.yml && \
+    chmod 0400 /etc/axonops/axon-agent.yml && \
+    touch /var/run/utmp
+
+ARG CASSANDRA_MAJOR_VERSION
+ENV JVM_EXTRA_OPTS="-javaagent:/usr/share/axonops/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar=/etc/axonops/axon-agent.yml"
+
+COPY entrypoint-files/cassandra-testing-entrypoint.sh /cassandra-testing-entrypoint.sh
+RUN chown root:root /cassandra-testing-entrypoint.sh && chmod 0755 /cassandra-testing-entrypoint.sh
+
+ENTRYPOINT ["/cassandra-testing-entrypoint.sh"]
+CMD ["cassandra", "-f"]

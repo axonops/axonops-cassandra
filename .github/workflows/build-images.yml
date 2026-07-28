@@ -1,0 +1,79 @@
+name: build-images
+
+# Builds and publishes the AxonOps Cassandra images for versions 4.1, 4.0 and
+# 5.0 on both amd64 and arm64, then assembles multi-arch manifests. Manual
+# trigger only — replaces the Bitbucket "build-images" + "Publish images"
+# custom pipelines.
+#
+# amd64 legs run on GitHub-hosted x86 runners; arm64 legs run on GitHub-hosted
+# arm64 runners (no self-hosted runner required). Pushes to Google Artifact
+# Registry using the base64-encoded GCLOUD_API_KEYFILE secret.
+on:
+  workflow_dispatch:
+
+env:
+  IMGBASE: europe-docker.pkg.dev/axonops-public/axonops-docker/cassandra
+  REGISTRY: https://europe-docker.pkg.dev
+
+jobs:
+  build:
+    name: Build ${{ matrix.version }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["4.1", "4.0", "5.0"]
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Google Artifact Registry
+        env:
+          GCLOUD_API_KEYFILE: ${{ secrets.GCLOUD_API_KEYFILE }}
+        run: |
+          # Decode the service-account key to a file, then feed it to docker
+          # login via stdin so the key never appears in the command line or logs.
+          printf '%s' "$GCLOUD_API_KEYFILE" | base64 -d > gcloud-api-key.json
+          docker login -u _json_key --password-stdin "$REGISTRY" < gcloud-api-key.json
+
+      - name: Build and push ${{ matrix.version }}-${{ matrix.arch }}
+        run: |
+          ./build-image.sh "${{ matrix.version }}" "${{ matrix.arch }}"
+          docker push "${IMGBASE}:${{ matrix.version }}-${{ matrix.arch }}"
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f gcloud-api-key.json
+
+  manifest:
+    name: Publish multi-arch manifests
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_CLI_EXPERIMENTAL: enabled
+    steps:
+      - name: Log in to Google Artifact Registry
+        env:
+          GCLOUD_API_KEYFILE: ${{ secrets.GCLOUD_API_KEYFILE }}
+        run: |
+          printf '%s' "$GCLOUD_API_KEYFILE" | base64 -d > gcloud-api-key.json
+          docker login -u _json_key --password-stdin "$REGISTRY" < gcloud-api-key.json
+
+      - name: Create and push manifests
+        run: |
+          for v in 4.1 4.0 5.0; do
+            docker manifest create "${IMGBASE}:${v}" \
+              "${IMGBASE}:${v}-amd64" \
+              "${IMGBASE}:${v}-arm64"
+            docker manifest push "${IMGBASE}:${v}"
+          done
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f gcloud-api-key.json

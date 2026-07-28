@@ -1,0 +1,28 @@
+export CASSANDRA_MAJOR_VERSION = 5.0
+
+
+IMAGE_NAME := castesting:${CASSANDRA_MAJOR_VERSION}
+DOCKERFILE := dockerfiles/cassandra.dockerfile
+
+export AXONOPS_SERVER_HOSTS := 10.0.1.104 # agents.axonopsdev.com
+export AXONOPS_ORG := testorg
+export AXONOPS_CLUSTER_NAME := clustername
+export AXONOPS_SERVER_PORT := 443
+export AXONOPS_TLS_MODE := TLS # none
+export AXON_AGENT_KEY := key
+
+export AXON_AGENT_DEV := true
+export AXON_AGENT_SOURCE_DIR := /home/karl.sorensen/Documents/axonops/agent/
+export AXON_AGENT_VERSION := 
+
+export CASSANDRA_AGENT_DEV := false
+export CASSANDRA_AGENT_SOURCE_DIR := /home/karl.sorensen/Documents/axonops/cassandra_agent
+export CASSANDRA_AGENT_VERSION := 
+
+export CASSANDRA_CLUSTER_NAME := labcassandra
+
+export AGENT_REPO_NAME := "prod"
+export JAVA_EXTRA_ARGS := -javaagent:/usr/share/axonops/axon-cassandra5.0-agent.jar=/etc/axonops/axon-agent.yml
+
+
+CONTAINER_TYPE := podman
