@@ -26,7 +26,7 @@ permissions:
   packages: write
 
 env:
-  IMGBASE: ghcr.io/axonops/cassandra
+  IMGBASE: ghcr.io/axonops/axonops-cassandra
   REGISTRY: ghcr.io
 
 jobs:
@@ -82,10 +82,10 @@ jobs:
               --format '{{range .Config.Env}}{{println .}}{{end}}' \
               | sed -n 's/^CASSANDRA_VERSION=//p')
 
-            # Installed axon-agent package version (strip any Debian revision).
-            agent_version=$(docker run --rm --entrypoint sh "$amd" -c \
-              "dpkg-query -W -f='\${Version}\n' 'axon-cassandra*-agent*' 2>/dev/null | head -1" \
-              | sed 's/-.*//')
+            # Installed axon-agent package version, stamped as a label at build
+            # time by build-image.sh.
+            agent_version=$(docker inspect "$amd" \
+              --format '{{index .Config.Labels "com.axonops.agent.version"}}')
 
             if [ -z "$cassandra_version" ] || [ -z "$agent_version" ]; then
               echo "FATAL: could not resolve versions for $v (cassandra='$cassandra_version' agent='$agent_version')"

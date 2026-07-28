@@ -27,13 +27,13 @@ CI runs on GitHub Actions (manual `workflow_dispatch` triggers):
 | [`update-version.yml`](.github/workflows/update-version.yml) | Refresh pinned upstream Cassandra versions (4.1, 4.0, 5.0) and commit the result. |
 | [`build-images.yml`](.github/workflows/build-images.yml) | Build + push `amd64` and `arm64` images per version, then publish multi-arch manifests. |
 
-Images are published to the GitHub Container Registry: `ghcr.io/axonops/cassandra`.
+Images are published to the GitHub Container Registry: `ghcr.io/axonops/axonops-cassandra`.
 
 Each build publishes a multi-arch manifest tagged with the full version triple, plus a moving minor alias:
 
 ```
-ghcr.io/axonops/cassandra:<cassandra_version>-<axon_agent_version>-<repo_tag>   # e.g. 5.0.8-2.1.0-1.0.0
-ghcr.io/axonops/cassandra:<minor>                                              # e.g. 5.0 (moving alias)
+ghcr.io/axonops/axonops-cassandra:<cassandra_version>-<axon_agent_version>-<repo_tag>   # e.g. 5.0.8-2.1.0-1.0.0
+ghcr.io/axonops/axonops-cassandra:<minor>                                              # e.g. 5.0 (moving alias)
 ```
 
 The `<repo_tag>` (third component) is supplied as the `repo_tag` input when dispatching `build-images.yml`.
@@ -41,7 +41,7 @@ The `<repo_tag>` (third component) is supplied as the `repo_tag` input when disp
 To build locally:
 
 ```bash
-export IMGBASE=ghcr.io/axonops/cassandra
+export IMGBASE=ghcr.io/axonops/axonops-cassandra
 ./build-image.sh 5.0 amd64
 ```
 
