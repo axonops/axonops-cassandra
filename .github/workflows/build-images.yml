@@ -6,14 +6,18 @@ name: build-images
 # custom pipelines.
 #
 # amd64 legs run on GitHub-hosted x86 runners; arm64 legs run on GitHub-hosted
-# arm64 runners (no self-hosted runner required). Pushes to Google Artifact
-# Registry using the base64-encoded GCLOUD_API_KEYFILE secret.
+# arm64 runners (no self-hosted runner required). Images are pushed to the
+# GitHub Container Registry (ghcr.io) using the built-in GITHUB_TOKEN.
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 env:
-  IMGBASE: europe-docker.pkg.dev/axonops-public/axonops-docker/cassandra
-  REGISTRY: https://europe-docker.pkg.dev
+  IMGBASE: ghcr.io/axonops/cassandra
+  REGISTRY: ghcr.io
 
 jobs:
   build:
@@ -33,23 +37,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Log in to Google Artifact Registry
-        env:
-          GCLOUD_API_KEYFILE: ${{ secrets.GCLOUD_API_KEYFILE }}
+      - name: Log in to GitHub Container Registry
         run: |
-          # Decode the service-account key to a file, then feed it to docker
-          # login via stdin so the key never appears in the command line or logs.
-          printf '%s' "$GCLOUD_API_KEYFILE" | base64 -d > gcloud-api-key.json
-          docker login -u _json_key --password-stdin "$REGISTRY" < gcloud-api-key.json
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
 
       - name: Build and push ${{ matrix.version }}-${{ matrix.arch }}
         run: |
           ./build-image.sh "${{ matrix.version }}" "${{ matrix.arch }}"
           docker push "${IMGBASE}:${{ matrix.version }}-${{ matrix.arch }}"
-
-      - name: Remove credentials
-        if: always()
-        run: rm -f gcloud-api-key.json
 
   manifest:
     name: Publish multi-arch manifests
@@ -58,12 +54,10 @@ jobs:
     env:
       DOCKER_CLI_EXPERIMENTAL: enabled
     steps:
-      - name: Log in to Google Artifact Registry
-        env:
-          GCLOUD_API_KEYFILE: ${{ secrets.GCLOUD_API_KEYFILE }}
+      - name: Log in to GitHub Container Registry
         run: |
-          printf '%s' "$GCLOUD_API_KEYFILE" | base64 -d > gcloud-api-key.json
-          docker login -u _json_key --password-stdin "$REGISTRY" < gcloud-api-key.json
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
 
       - name: Create and push manifests
         run: |
@@ -73,7 +67,3 @@ jobs:
               "${IMGBASE}:${v}-arm64"
             docker manifest push "${IMGBASE}:${v}"
           done
-
-      - name: Remove credentials
-        if: always()
-        run: rm -f gcloud-api-key.json

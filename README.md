@@ -27,12 +27,12 @@ CI runs on GitHub Actions (manual `workflow_dispatch` triggers):
 | [`update-version.yml`](.github/workflows/update-version.yml) | Refresh pinned upstream Cassandra versions (4.1, 4.0, 5.0) and commit the result. |
 | [`build-images.yml`](.github/workflows/build-images.yml) | Build + push `amd64` and `arm64` images per version, then publish multi-arch manifests. |
 
-Images are published to `europe-docker.pkg.dev/axonops-public/axonops-docker/cassandra`.
+Images are published to the GitHub Container Registry: `ghcr.io/axonops/cassandra`.
 
 To build locally:
 
 ```bash
-export IMGBASE=europe-docker.pkg.dev/axonops-public/axonops-docker/cassandra
+export IMGBASE=ghcr.io/axonops/cassandra
 ./build-image.sh 5.0 amd64
 ```
 
