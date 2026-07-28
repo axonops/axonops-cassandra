@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CHANGELOG.md` (this file).
 
 ### Changed
+- `README.md` expanded to the AxonOps branded documentation standard: quick start, Docker/Compose usage examples, a configuration reference table (image env vars, mount paths), and corrected CI trigger docs (`build-images.yml` now runs on `v*` tags as well as `workflow_dispatch`).
 - `Dockerfile-template` now installs the AxonOps apt repo signing key into `/usr/share/keyrings/axonops.gpg` (via `gpg --dearmor`) and references it with `signed-by=` in the sources list, replacing the deprecated `apt-key add`. Adds `ca-certificates` to the install set.
 - Repository migrated from Bitbucket (`git@bitbucket.org:digitalisio/dk-axonops-cassandra.git`) to GitHub (`git@github.com:axonops/axonops-cassandra.git`); `README.md` updated with the new clone URL and CI documentation.
 - Image registry changed from Google Artifact Registry (`europe-docker.pkg.dev/axonops-public/axonops-docker/cassandra`) to the GitHub Container Registry (`ghcr.io/axonops/axonops-cassandra`). Publishing authenticates with the built-in `GITHUB_TOKEN` (`packages: write`) via `docker login --password-stdin`; the `GCLOUD_API_KEYFILE` secret is no longer required. The `axonops-cassandra` package name avoids collision with the pre-existing `ghcr.io/axonops/cassandra` package owned by `axonops-workbench-containers`.
