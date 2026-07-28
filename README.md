@@ -1,5 +1,7 @@
 <p align="center">
-  <a href="https://axonops.com"><img src="https://axonops.com/wp-content/uploads/axonops-logo.png" alt="AxonOps" width="360"/></a>
+  <a href="https://axonops.com">
+    <img src="https://digitalis-marketplace-assets.s3.us-east-1.amazonaws.com/AxonopsDigitalMaster_AxonopsFullLogoBlue.jpg" alt="AxonOps" width="300">
+  </a>
 </p>
 
 # AxonOps Cassandra Docker image
