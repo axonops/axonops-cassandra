@@ -111,15 +111,36 @@ CI runs on GitHub Actions:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | [`update-version.yml`](.github/workflows/update-version.yml) | `workflow_dispatch` | Refresh pinned upstream Cassandra versions (4.1, 4.0, 5.0) and commit the result. |
-| [`build-images.yml`](.github/workflows/build-images.yml) | push `v*` tag / `workflow_dispatch` | Build + push `amd64` and `arm64` images per version, then publish multi-arch manifests. |
+| [`build-images.yml`](.github/workflows/build-images.yml) | push `v*` tag / `workflow_dispatch` / `workflow_call` | Build + push `amd64` and `arm64` images per version, then publish multi-arch manifests. |
+| [`daily-refresh.yml`](.github/workflows/daily-refresh.yml) | daily at 03:00 UTC / `workflow_dispatch` | Rebuild and republish when a new upstream Cassandra release or axon-agent package appears. |
 
-The `<repo_tag>` (third tag component) is taken from the pushed tag name with the leading `v` stripped (`v1.0.0` → `1.0.0`), or from the `repo_tag` input when dispatched manually.
+The `<repo_tag>` (third tag component) is taken from the pushed tag name with the leading `v` stripped (`v1.0.0` → `1.0.0`), or from the `repo_tag` input when dispatched manually or called by `daily-refresh.yml`.
 
 To build locally:
 
 ```bash
 export IMGBASE=ghcr.io/axonops/axonops-cassandra
 ./build-image.sh 5.0 amd64
+```
+
+### Automatic rebuilds
+
+`daily-refresh.yml` runs [`check-updates.sh`](check-updates.sh), which compares the upstream versions against the versions baked into the currently published `<minor>` manifests:
+
+| Component | Upstream source |
+|-----------|-----------------|
+| Cassandra | `ENV CASSANDRA_VERSION` in the [docker-library/cassandra](https://github.com/docker-library/cassandra) Dockerfile for that minor version |
+| axon-agent | Highest `axon-cassandra<minor>-agent[-jdk17]` version in the [AxonOps apt index](https://packages.axonops.com/apt) |
+
+If anything drifted, every version is rebuilt (so one repo tag consistently describes all published manifests), the patch component of the newest `v*` tag is bumped, and that tag is created on the built commit.
+
+Run the check locally — it only reads, never builds:
+
+```bash
+./check-updates.sh
+# 4.0 current upstream=4.0.20/1.0.18 published=4.0.20/1.0.18
+# ...
+# STALE_VERSIONS=
 ```
 
 ## Contact
