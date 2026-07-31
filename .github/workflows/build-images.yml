@@ -24,6 +24,13 @@ on:
         description: "Repo release version — third tag component (e.g. 1.0.0)"
         required: true
         default: "1.0.0"
+  # Callable from daily-refresh.yml, which computes the next repo tag itself.
+  workflow_call:
+    inputs:
+      repo_tag:
+        description: "Repo release version — third tag component (e.g. 1.0.0)"
+        required: true
+        type: string
 
 permissions:
   contents: read
