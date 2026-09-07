@@ -68,7 +68,7 @@ services:
       - EXTRA_ARGS=${JAVA_EXTRA_ARGS}
       - AXON_AGENT_ARGS=-v 1
       - AXON_AGENT_DEV=${AXON_AGENT_DEV}
-      - AXON_AGENT_VERSION=${AXON_AGENT_VERSION}      
+      - AXON_AGENT_VERSION=${AXON_AGENT_VERSION}
       - AGENT_REPO=${AGENT_REPO_NAME}
       - AGENT_VERSION=${AGENT_VERSION}
       - CASSANDRA_AGENT_VERSION=${CASSANDRA_AGENT_VERSION}
@@ -81,14 +81,14 @@ services:
       test: ["CMD", "/opt/cassandra/bin/nodetool", "statusgossip"]
       interval: 10s
       timeout: 5s
-      retries: 50      
+      retries: 50
   cassandra-2:
     image: castesting:${CASSANDRA_MAJOR_VERSION}
     ports:
      - "9044:9044"
     depends_on:
       cassandra-1:
-        condition: service_healthy     
+        condition: service_healthy
     environment:
       - CASSANDRA_CLUSTER_NAME=${AXONOPS_CLUSTER_NAME}
       - CASSANDRA_SEEDS=cassandra-0
@@ -112,12 +112,12 @@ services:
       - AXON_AGENT_DEV=${AXON_AGENT_DEV}
       - AGENT_REPO=${AGENT_REPO_NAME}
       - AGENT_VERSION=${AGENT_VERSION}
-      - AXON_AGENT_VERSION=${AXON_AGENT_VERSION}      
+      - AXON_AGENT_VERSION=${AXON_AGENT_VERSION}
       - CASSANDRA_AGENT_VERSION=${CASSANDRA_AGENT_VERSION}
-      - CASSANDRA_DATA_LOAD=true      
+      - CASSANDRA_DATA_LOAD=true
     volumes:
       # - cassandra-2:/var/lib/cassandra
-      - ./testdb.sql:/tmp/testdb.sql      
+      - ./testdb.sql:/tmp/testdb.sql
       - ${AXON_AGENT_SOURCE_DIR}/axon-agent:/tmp/axonagent/axon-agent
       - cassandra-2-axonops:/var/lib/axonops/
       # - ${CASSANDRA_AGENT_SOURCE_DIR}/build/libs/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar:/usr/share/axonops/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar:ro
@@ -125,7 +125,7 @@ services:
       test: ["CMD", "/opt/cassandra/bin/nodetool", "statusgossip"]
       interval: 10s
       timeout: 5s
-      retries: 50      
+      retries: 50
 
   ssh-server:
     image: lscr.io/linuxserver/openssh-server:latest
@@ -157,7 +157,7 @@ services:
       MINIO_REGION: eu-west-2
     volumes:
       - minio-data:/data
-    command: server /data --console-address ":9001" --address ":9000" 
+    command: server /data --console-address ":9001" --address ":9000"
     deploy:
       resources:
         limits:
@@ -175,7 +175,7 @@ services:
       sleep 10;
       echo 'Setting up MinIO...';
       /usr/bin/mc alias set admin http://minio:9000 minioadmin minioadmin;
-      echo 'Creating bucket...';      
+      echo 'Creating bucket...';
       /usr/bin/mc mb admin/testbucket --ignore-existing;
       /usr/bin/mc anonymous set public admin/testbucket;
       /usr/bin/mc admin user svcacct add admin minioadmin --access-key $$ACCESS_KEY --secret-key $$SECRET_KEY;
@@ -185,8 +185,8 @@ services:
       echo 'All tests passed!';
       exit 0;
       "
-          
-      
+
+
 volumes:
   cassandra-0:
   cassandra-1:

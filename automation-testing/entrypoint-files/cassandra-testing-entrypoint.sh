@@ -2,7 +2,7 @@
 
 
 set -e
-set -x 
+set -x
 
 if [[ "${AXON_AGENT_DEV}" != "True" && "${AXON_AGENT_DEV}" != "true" ]] || [[ "${CASSANDRA_AGENT_DEV}" != "True" && "${CASSANDRA_AGENT_DEV}" != "true" ]]; then
 
@@ -49,17 +49,17 @@ else
     CASSANDRA_AGENT_STRING=axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent-jdk17
 fi
 
-if [[ "${CASSANDRA_AGENT_DEV}" != "True" && "${CASSANDRA_AGENT_DEV}" != "true" ]]; then 
+if [[ "${CASSANDRA_AGENT_DEV}" != "True" && "${CASSANDRA_AGENT_DEV}" != "true" ]]; then
   apt-get -y install -t ${AGENT_REPO_NAME} ${CASSANDRA_AGENT_STRING} --allow-downgrades
-  su -c "chmod g+r /usr/share/axonops/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar"  
+  su -c "chmod g+r /usr/share/axonops/axon-cassandra${CASSANDRA_MAJOR_VERSION}-agent.jar"
 fi
 
-if [[ "${AXON_AGENT_DEV}" != "True" && "${AXON_AGENT_DEV}" != "true" ]]; then 
+if [[ "${AXON_AGENT_DEV}" != "True" && "${AXON_AGENT_DEV}" != "true" ]]; then
   AXON_AGENT_CONFIG_LOCATION=/etc/axonops/axon-agent.yml
-else    
+else
   mkdir -p /tmp/axonops/config
   chown -R axonops:axonops /tmp/axonops
-  AXON_AGENT_CONFIG_LOCATION=/tmp/axonops/config/test_config.yml  
+  AXON_AGENT_CONFIG_LOCATION=/tmp/axonops/config/test_config.yml
 
   cat <<EOF > ${AXON_AGENT_CONFIG_LOCATION}
   axon-server:
@@ -132,7 +132,7 @@ check_seed_status (){
       echo "Attempt $ATTEMPTS/$MAX_ATTEMPTS: Cassandra not ready, retrying in ${DELAY_TIME} seconds..."
       sleep ${DELAY_TIME}
   done
-  
+
 }
 
 if [ "${CASSANDRA_SEED_NODE}" == false ]; then

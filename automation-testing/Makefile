@@ -10,14 +10,14 @@ help: ## This
 build: ## Build container image
 	${CONTAINER_TYPE} build --no-cache -t $(IMAGE_NAME) -f $(DOCKERFILE) --build-arg CASSANDRA_MAJOR_VERSION=${CASSANDRA_MAJOR_VERSION} .
 
-clean: ## Remove all running containers 
-	${CONTAINER_TYPE}-compose -f compose.yml down 
+clean: ## Remove all running containers
+	${CONTAINER_TYPE}-compose -f compose.yml down
 
 run: ## Startup Node0
 	${CONTAINER_TYPE}-compose -f compose.yml up -d
 
 node0: ## Startup Node0
-	${CONTAINER_TYPE}-compose -f compose.yml up -d cassandra-0 
+	${CONTAINER_TYPE}-compose -f compose.yml up -d cassandra-0
 
 node1: ## Startup Node1
 	${CONTAINER_TYPE}-compose -f compose.yml up -d cassandra-1
@@ -36,4 +36,3 @@ runsupporting:
 stopsupporting:
 	$(CONTAINER_TYPE)-compose -f compose.yml down minio
 	$(CONTAINER_TYPE)-compose -f compose.yml down ssh-server
-	

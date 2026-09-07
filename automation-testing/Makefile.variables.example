@@ -13,11 +13,11 @@ export AXON_AGENT_KEY := key
 
 export AXON_AGENT_DEV := true
 export AXON_AGENT_SOURCE_DIR := /home/karl.sorensen/Documents/axonops/agent/
-export AXON_AGENT_VERSION := 
+export AXON_AGENT_VERSION :=
 
 export CASSANDRA_AGENT_DEV := false
 export CASSANDRA_AGENT_SOURCE_DIR := /home/karl.sorensen/Documents/axonops/cassandra_agent
-export CASSANDRA_AGENT_VERSION := 
+export CASSANDRA_AGENT_VERSION :=
 
 export CASSANDRA_CLUSTER_NAME := labcassandra
 
